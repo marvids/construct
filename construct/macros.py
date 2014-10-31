@@ -6,7 +6,8 @@ from construct.core import (Struct, MetaField, StaticField, FormatField,
     Select, Pass, SizeofError, Buffered, Restream, Reconfig)
 from construct.adapters import (BitIntegerAdapter, PaddingAdapter,
     ConstAdapter, CStringAdapter, LengthValueAdapter, IndexingAdapter,
-    PaddedStringAdapter, FlagsAdapter, StringAdapter, MappingAdapter)
+    PaddedStringAdapter, FlagsAdapter, StringAdapter, MappingAdapter,
+    FormatAdapter, ExprAdapter)
 try:
     from sys import maxsize
 except ImportError:
@@ -643,6 +644,16 @@ def If(predicate, subcon, elsevalue = None):
         Value("elsevalue", lambda ctx: elsevalue)
     )
 
+#===============================================================================
+# formatters
+#===============================================================================
+def Unit(subcon, unit):
+    """ Add a unit to the string representation """
+    return FormatAdapter(subcon, "{self} {unit}", unit=unit)
+
+def Hex(subcon):
+    """ Present the value in hex """
+    return FormatAdapter(subcon, "0x{self:X}")
 
 #===============================================================================
 # misc
@@ -673,4 +684,9 @@ def Magic(data):
     """
     return ConstAdapter(Field(None, len(data)), data)
 
+def Resolution(subcon, res):
+    """ Apply a multiplier """
+    return ExprAdapter(subcon,
+            encoder = lambda val, ctx: val/float(res),
+            decoder = lambda val, ctx: val*res)
 

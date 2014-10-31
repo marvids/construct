@@ -395,6 +395,31 @@ class PaddingAdapter(Adapter):
                 raise PaddingError("expected %r, found %r" % (expected, obj))
         return obj
 
+class FormatAdapter(Adapter):
+    r"""
+    Adapter for formatting the string representation
+
+    :param subcon: the subcon to apply formatting to
+    :param fmt: the format string
+    :param fmt_kwargs: keyword arguments to the formatting string
+    """
+    __slots__ = ["fmt", "fmt_kwargs"]
+    def __init__(self, subcon, fmt, **fmt_kwargs):
+        Adapter.__init__(self, subcon)
+        self.fmt = fmt
+        self.fmt_kwargs = fmt_kwargs
+    def _encode(self, obj, ctx):
+        return obj
+    def _decode(self, obj, ctx):
+        def fmt_fcn(self, *args, **kwargs):
+            return self.fmt.format(**self.fmt_kwargs)
+        d = {"__pretty_str__": fmt_fcn,
+             "__str__": fmt_fcn,
+             "fmt": self.fmt,
+             "fmt_kwargs": self.fmt_kwargs}
+        new_obj = type('', (type(obj),), d)(obj)
+        new_obj.fmt_kwargs['self'] = obj
+        return new_obj
 
 #===============================================================================
 # validators
